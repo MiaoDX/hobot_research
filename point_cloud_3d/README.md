@@ -14,7 +14,7 @@
 
 ## Datasets
 
-* [Large-Scale Point Cloud Classification Benchmark](http://www.semantic3d.net/)
+* [Semantic3D, Large-Scale Point Cloud Classification Benchmark](http://www.semantic3d.net/)
     - Newer, larger
     - We can always find some nice papers in the [result page](http://www.semantic3d.net/view_results.php)
 * [S3DIS, Stanford Large-Scale 3D Indoor Spaces](http://buildingparser.stanford.edu/dataset.html)
