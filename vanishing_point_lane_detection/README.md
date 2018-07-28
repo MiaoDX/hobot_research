@@ -5,11 +5,19 @@ Lane detection itself is one popular research topic, and with vanishing point as
 
 ## Resources
 
+### VP related
+
 * [VPGNet: Vanishing Point Guided Network for Lane and Road Marking Detection and Recognition](https://github.com/SeokjuLee/VPGNet)
 * [Vanishing Point Detection in Urban Scenes Using Point Alignments](https://github.com/dmaugis/detect_vps)
 * [Deep Learning for Vanishing Point Detection Using an Inverse Gnomonic Projection](https://arxiv.org/abs/1707.02427)
 * [DeepVP: Deep Learning for Vanishing Point Detection on 1 Million Street View Images](http://jiapingzhao.net/)
     - The intro is attractive, the pdf link is blank
+* [Detecting Vanishing Points using Global Image Context in a Non-Manhattan World](https://github.com/viibridges/gc-horizon-detector)
+* [Horizon Lines in the Wild](https://github.com/scottworkman/deephorizon)
+
+### Lane detection
+
+* [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://github.com/MaybeShewill-CV/lanenet-lane-detection)
 
 ## Datasets
 
