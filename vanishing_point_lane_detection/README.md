@@ -26,6 +26,7 @@ Lane detection itself is one popular research topic, and with vanishing point as
 * [York Urban Line Segment Database](http://www.elderlab.yorku.ca/resources/york-urban-line-segment-database-information/York Urban Line Segment Database)
 * [Eurasian Cities Dataset](http://graphics.cs.msu.ru/en/research/projects/msr/geometry)
 * [Horizon Lines in the Wild](http://www.cs.uky.edu/~jacobs/datasets/hlw/)
+* [The Toulouse Vanishing Points Dataset](http://ubee.enseeiht.fr/dokuwiki/doku.php?id=public:toulousevpdataset)
 
 ## Person
 
