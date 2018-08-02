@@ -1,0 +1,2 @@
+pandoc -f markdown -t revealjs --standalone --self-contained paper_sharing.md -o paper_sharing.html -V theme=serif2 -V revealjs-url=D:/ws/projects/git_repos/reveal.js -i
+# pandoc -f markdown -t revealjs --standalone proposal.md -o proposal.html -V theme=serif2 -V revealjs-url=pandoc_markdown_revealjs/reveal.js -i
