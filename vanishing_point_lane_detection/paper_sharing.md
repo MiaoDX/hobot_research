@@ -51,11 +51,26 @@ The image location of the horizon line is defined as the projection of the line 
 VPGNet: Vanishing Point Guided Network for Lane and Road Marking Detection and Recognition, Seokju Lee, Junsik Kim, and other 8 people,<br> ICCV 2017
 
 ***
-
 ![](pics/vpgnet_demo1.png){width=55%}
+
+***
+### Architecture
+
+![](pics/vpgnet_net.png){width=95%}
 
 
 ***
+### Dataset preparation
+
+* Polygon/pixel-level annotation
+    - We manually annotate corner points of lane and road markings. Corner points are connected to form a polygon which results in a **pixel-level mask** annotation for each object. In a similar manner, each pixel contains a **class label**.
+* Vanishing point
+    - We localize the vanishing point in a road scene where parallel lanes supposedly meet. Depending on the scene, a **difficulty level** (EASY, HARD, NONE) is assigned to every vanishing point.
+* Grid level projection
+
+
+***
+**Grid level projection**
 
 * If the network is trained with a thin lane annotation, the information tends to vanish through convolution and pooling layers
 * Most of the neural networks require a resized image (usually smaller than original size), the thin annotations become barely visible
@@ -63,23 +78,12 @@ VPGNet: Vanishing Point Guided Network for Lane and Road Marking Detection and R
 
 . . .
 
-![](pics/vpgnet_grid_level.png){width=55%}
+![](pics/vpgnet_grid_level.png){width=65%}
 
 ***
-### Dataset
 
-* Polygon/pixel-level annotation
-    - We manually annotate corner points of lane and road markings. Corner points are connected to form a polygon which results in a **pixel-level mask** annotation for each object. In a similar manner, each pixel contains a **class label**.
-* Grid level projection
-* Vanishing point
-    - We localize the vanishing point in a road scene where parallel lanes supposedly meet. Depending on the scene, a **difficulty level** (EASY, HARD, NONE) is assigned to every vanishing point.
+### Pipeline
 
-***
-### Architecture
-
-![](pics/vpgnet_net.png){width=75%}
-
-***
 * Propose a data layer to induce grid-level annotation that enables training of both lane and road markings simultaneously
 * Propose an regression that utilizes a grid-level mask. Points on the grid are regressed to the closest grid cell and combined by a multi-label classification task to represent an object
 * For the post-processing, lane classes only use the output of the multi-label task, and road marking classes utilize both grid box regression and multi-label task
@@ -87,19 +91,19 @@ VPGNet: Vanishing Point Guided Network for Lane and Road Marking Detection and R
 ***
 ### VPP (Vanishing Point Prediction Task)
 
-
-* regression losses 
+* Regression losses 
     - (i.e. L1, L2, hinge losses) that directly calculate pixel distances from a VP
     - difficult to balance the losses with other tasks (object detection/multi-label classification) due to the difference in the loss scale
-* cross entropy
+* Cross entropy
     - binary classification method that directly classifies background and foreground
         + Since the vanishing area is drastically smaller than the background, the network is initialized to infer every pixel as background class.
 
 ***
 The purpose of attaching the VPP task is to improve a scene representation that implies a global context to predict invisible lanes due to occlusions or extreme illumination condition (just like human).
 
+. . .
 
-Whole scene should be taken into account to efficiently reflect global information inferring lane locations
+So whole scene should be taken into account to efficiently reflect global information inferring lane locations
 
 * Quadrant mask that divides the whole image into four sections
 * Define five channels for the output of the VPP task: one absence channel and four quadrant channels
@@ -124,7 +128,7 @@ Whole scene should be taken into account to efficiently reflect global informati
 
 * VPP task
     - fix the learning rates to zero for every task except the VPP module
-* all tasks (including VPP)
+* All tasks (including VPP)
     - balance learning rates
         + $$Loss = w_1L_{reg} + w_2L_{om} + w_3L_{ml} + w_4L{vp}$$
         + where $L_{reg}$ is a grid regression L1 loss, $L_{om}$ and $L_{ml}$ and $L_{vp}$ are cross entropy losses in each branch of the network
@@ -167,6 +171,7 @@ crosswalks or safety zones (difficult to define by single box) no merging
 
 ![](pics/vpgnet_featuremap.png){width=45%}
 
+2-Task network includes regression and binary classification tasks. 3-Task network includes 2-Task and a multi-label classification task. 4-Task network includes 3-Task and a VPP task, which is the VPGNet.
 
 # GIC
 
@@ -235,13 +240,13 @@ from the categorical probability distribution
 ![](pics/gic_pipeline.png){width=75%}
 
 ***
-![The benefit of PDF for extracting horizon line candidates](pics/gic_dist.png){width=75%}
+![The benefit of PDF for extracting horizon line candidates](pics/gic_dist.png){width=65%}
 
 ***
 ![](pics/gic_showcase.png){width=95%}
 
 ***
-![](pics/gic_eval.png){width=90%}
+![](pics/gic_eval.png){width=95%}
 
 ***
 # HLW
@@ -250,7 +255,6 @@ HLW, Horizon Lines in the Wild, Scott Workman, Menghua Zhai, Nathan Jacobs, BMVC
 
 
 ***
-
 * Existing methods
     - **typically require** the image to contain specific **cues**
     - such as vanishing points, coplanar circles, and regular textures
@@ -391,8 +395,14 @@ HLW, Horizon Lines in the Wild, Scott Workman, Menghua Zhai, Nathan Jacobs, BMVC
 
 The optimization way is slow, too slow to be practical on ADAS systems, the End-to-End can be fast, but it will face the challenge of interpretability.
 
-VPGNet, NVIDIA GTX Titan X, 20 Hz, forward pass 30 ms, post-processing 20 ms or less
+. . .
+
+VPGNet, NVIDIA GTX Titan X, 20 Hz, forward pass 30 ms, <br>post-processing 20 ms or less
 
 GIC, average of 1 second per image, 3s on ECD dataset
 
 HLW, milliseconds per image
+
+# That's all, thanks :)
+
+> Good Luck & Have Fun
