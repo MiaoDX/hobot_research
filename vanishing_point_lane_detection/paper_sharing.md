@@ -1,5 +1,5 @@
 % Vanishing point, horizon line and lane detection
-% MiaoDX 缪东旭 <br>MiaoDX@hotmail.com
+% MiaoDX 缪东旭 <br>MiaoDX@hotmail.com dongxu.miao@horizon.ai
 % August, 2018
 
 ***
@@ -11,7 +11,10 @@ GIC, Detecting Vanishing Points using Global Image Context in a Non-Manhattan Wo
 
 HLW, Horizon Lines in the Wild, Scott Workman, Menghua Zhai, Nathan Jacobs, BMVC 2016
 
+<div class="notes">
 IGP, Deep Learning for Vanishing Point Detection Using an Inverse Gnomonic Projection, Florian Kluger, Hanno Ackermann, Michael Ying Yang, Bodo Rosenhahn, GCPR 2017
+</div>
+
 
 # What is VP
 
@@ -28,6 +31,11 @@ A vanishing point is a point where parallel lines in a three-dimensional space c
 In this paper, “Vanishing Point (VP)” is defined as the nearest point on the horizon where lanes converge and disappear predictively around the farthest point of the visible lane. -- VPGNet
 
 ![VPGNet (driving) VP annotation](pics/vpgnet_vp_anno.png){width=55%}
+
+***
+## Horizon lines
+
+The image location of the horizon line is defined as the projection of the line at infinity for any plane which is orthogonal to the local gravity vector. The gravity vector often coincides with the local ground plane surface normal, but not always. This is distinct from the problem of detecting the skyline, which is the set of points where the sky and the ground meet. -- HLW
 
 ***
 **Manhattan-world assumption:** <br>only three mutually orthogonal vanishing directions exist in a scene, as is reasonably common in urban scenes where buildings are aligned on a rectangular grid
@@ -98,10 +106,12 @@ Whole scene should be taken into account to efficiently reflect global informati
 * Instead of classify the VP, now assign all pixels.
 
 ***
-![](pics/vpgnet_vp.png){width=45%}
+![](pics/vpgnet_vp.png){width=75%}
 
 ***
 ### Training
+
+. . .
 
 **Trained together**
 
@@ -163,23 +173,198 @@ crosswalks or safety zones (difficult to define by single box) no merging
 Detecting Vanishing Points using Global Image Context in a Non-Manhattan World, Menghua Zhai, Scott Workman, Nathan Jacobs, CVPR 2016
 
 ***
-![](pics/gic_overview.png){width=75%}
+![](pics/gic_overview.png){width=95%}
+
+***
+
+* Dominant trend
+    - first find candidate vanishing points, then remove outliers by enforcing mutual orthogonality
+* Our method reverses this process
+    - we propose a set of horizon line candidates and score each based on the vanishing points it contains
+* Global image context
+    - extracted with a deep convolutional network, to constrain the set of horizon line candidates (and zenith vanishing point)
+
+***
+###  Global Image Context
+
+***
+![](pics/gic_data.png){width=75%}
+
+* equirectangular panoramas downloaded from Google Street View 
+* randomly sampled horizontal field-of-view (FOV), yaw, pitch, and roll
+* training database contains $110010$ images with known horizon line
+
+
+***
+* Parameterize
+    - slope angle $\alpha \in [-\pi,\pi)$
+    - offset, $o \in [0; inf)$, which is the shortest distance between the horizon line and the principal point
+    - “squash” o from pixel coordinates to the interval $[0; \pi/2)$, through a one-to-one function, $w = tan^{−1}(o/κ)$, in which $κ$ is a scaling factor that affects how dense the sampling is near the center of the image
+
+***
+* Train
+    - AlexNet
+    - remove the original fully connected layers (‘fc6’–‘fc8’)
+    - add two disjoint sets of fully connected layers (‘fc6α’–‘fc8α’ and ‘fc6w’–‘fc8w’), one for each target label, $\alpha$ and $w$. 
+    - We convert the slope, α, and the squashed offset, w, into independent categorical labels by uniformly dividing their respective domains into 500 bins.
+
+***
+* Make output continuous
+    - Given image
+    - The network outputs a categorical probability distribution for the slope, α, and squashed offset, w. 
+    - Make these distributions continuous by approximating them with a Gaussian distribution
+    - Estimate the mean and variance from $5000$ samples generated
+from the categorical probability distribution
+
+. . .
+
+![](pics/gic_pdf.png){width=45%}
+
+
+***
+### Horizon-First Vanishing Point Detection
+
+***
+* Pipeline
+    - Given Image
+    - Distributions estimated from global image context
+    - line segments extracted with LSD
+
+. . .
+
+![](pics/gic_pipeline.png){width=75%}
+
+***
+![The benefit of PDF for extracting horizon line candidates](pics/gic_dist.png){width=75%}
+
+***
+![](pics/gic_showcase.png){width=95%}
+
+***
+![](pics/gic_eval.png){width=90%}
+
+***
+# HLW
+
+HLW, Horizon Lines in the Wild, Scott Workman, Menghua Zhai, Nathan Jacobs, BMVC 2016
+
+
+***
+
+* Existing methods
+    - **typically require** the image to contain specific **cues**
+    - such as vanishing points, coplanar circles, and regular textures
+    - limiting their real-world applicability
+* Our method
+    - investigate the application of convolutional neural networks for directly estimating the horizon line
+    - without requiring any **explicit** geometric constraints or other special cues
+    - resulting network **implicitly** combines both geometric and semantic cues, makes no explicit assumptions about the contents of the underlying scene
+    - Data Driven
+
+***
+
+## Contributions
+
+* A novel approach for using structure from motion to automatically label images with a horizon line
+* A large evaluation dataset of images with labeled horizon lines
+* A CNN-based approach for directly estimating the horizon line in a single image, and
+* An extensive evaluation of a variety of CNN design choices
+
+
 
 ***
 
 
-* dominant trend
-    - first find candidate vanishing points, then remove outliers by enforcing mutual orthogonality
-* Our method reverses this process
-    - we propose a set of horizon line candidates and score each based on the vanishing points it contains
-* global image context
-    - extracted with a deep convolutional network, to constrain the set of horizon line candidates (and zenith vanishing point)
+### Related dataset status
+
+![](pics/hlw_datasets.png){width=75%}
+
+***
+* ECD, Eurasian Cities Dataset, 103 outdoor images captured in large urban areas, Atlanta-world assumption
+* YUD, York Urban Dataset, 102 images, Manhattan-world assumption, no camera 
+roll
+
+* Pipeline
+    - detect line segments, find vanishing points, then globally optimize to find a consistent scene interpretation. The reliance on vanishing points limits these methods to regions with many man-made structures
+
+***
+### The dataset acquisition
+
+* Leveraging Structure from Motion
+    - The output of SfM is the extrinsic and intrinsic camera parameters for a subset of the input images
+    - Assume that the expected roll of a camera is zero
+    - 100553 images
+
+. . .
+
+![](pics/hlw_sfm.png){width=65%}
 
 
+***
+* Street-side Imagery
+    - SfM are mostly of tourist landmarks
+    - Lack many other scenes, e.g forests, crop fields, industrial parks, and residential streets
+    - rectilinear cutouts extracted from equirectangular street-side imagery panoramas (via Google Street View)
+    - 500000 images
 
+. . .
 
+![](pics/hlw_stats.png){width=65%}
 
+* Notation
+    - represent the horizon line as $\rho = xcos\theta + ysin\theta$
+    - $\rho$ is the perpendicular distance from the origin to the horizon line - $\theta$ is the angle the horizon line makes with the horizontal axis
 
+***
+![The challenge/benefit of the HLW dataset](pics/hlw_eval_other.png){width=65%}
+
+***
+### Direct Horizon Line Estimation
+
+***
+* GoogleNet, similar accuracy, but many fewer parameters
+* Images have fixed size and a square aspect ratio
+    - maximal square center crop 
+    - dense grid if using an aggregation strategy
+    - reshape the image to be square, but the resulting networks were far less accurate
+* Parameterizations
+    - slope/offset, $(\theta; \rho)$
+    - left/right, $(l; r)$
+    -  $\rho$, $l$, and $r$ in units of image heights
+
+***
+* CNN variants
+    - Classification Approach
+        + primary benefit: the output of a CNN trained for a one-of-many classification task is a probability distribution over the categories
+        + Each parameter we generate N = 100 bins by linearly interpolating the cumulative distribution function of that parameter over the training data
+    - Regression Approach
+        + widely seen as more challenging than classification due to difficulties in controlling the optimization process and handling outliers
+        + typically performed using the L2 loss, but outliers reduce the generalization ability of the network and increase the convergence time
+        + minimize the Huber loss, a robust loss function that is less sensitive to outliers
+
+. . .
+
+![](pics/hlw_loss.png){width=35%}
+
+***
+### Aggregating Estimates Across Subwindows
+* Project the horizon line from the subwindow to the full-size image and averaging in image space (weighted by the confidence in each estimate)
+* Optimize for the horizon line in the full image that is maximally likely in all subwindows
+
+. . .
+
+![](pics/hlw_loss2.png){width=35%}
+
+$W$ is a function that maps the global horizon line, $\Theta$, into the coordinate frame for subwindow $I_i$, and extracts the probability.
+
+***
+### Result
+
+***
+![](pics/hlw_eval1.png){width=85%}
+
+***
+![](pics/hlw_eval2.png){width=75%}
 
 
 ***
@@ -188,12 +373,26 @@ Detecting Vanishing Points using Global Image Context in a Non-Manhattan World, 
 ***
 ### Quick Review
 
+. . .
+
+VPGNet: Vanishing Point Guided Network for Lane and Road Marking Detection and Recognition, Seokju Lee, Junsik Kim, and other 8 people,<br> ICCV 2017
+
+. . .
+
+GIC, Detecting Vanishing Points using Global Image Context in a Non-Manhattan World, Menghua Zhai, Scott Workman, Nathan Jacobs, CVPR 2016
+
+. . .
+
+HLW, Horizon Lines in the Wild, Scott Workman, Menghua Zhai, Nathan Jacobs, BMVC 2016
+
 
 ***
 ### Speed
 
 The optimization way is slow, too slow to be practical on ADAS systems, the End-to-End can be fast, but it will face the challenge of interpretability.
 
-~~A DIAGRAM is needed~~
-
 VPGNet, NVIDIA GTX Titan X, 20 Hz, forward pass 30 ms, post-processing 20 ms or less
+
+GIC, average of 1 second per image, 3s on ECD dataset
+
+HLW, milliseconds per image
